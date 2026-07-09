@@ -15,7 +15,7 @@ constexpr char kPrefsNamespace[] = "planeradar";
 constexpr char kPrefsRangeKey[] = "rangeIdx";
 constexpr char kPrefsMilesKey[] = "useMiles";
 constexpr char kPrefsRunwaysKey[] = "showRwys";
-constexpr uint8_t kDefaultRangeIndex = 1;  // 10 km ring
+constexpr uint8_t kDefaultRangeIndex = 3;  // 25 km ring (~15.5 mi)
 constexpr float kKmPerMile = 1.609344f;
 
 Preferences s_prefs;
@@ -117,6 +117,17 @@ void formatRing3Label(char* buf, size_t len, float ring3_km, bool use_miles) {
 
 void formatCurrentRing3Label(char* buf, size_t len) {
   formatRing3Label(buf, len, rangeCurrent().ring3_km, s_use_miles);
+}
+
+void saveRangeFromPortal(const char* value) {
+  if (!value || value[0] == '\0') return;
+  const int idx = atoi(value);
+  if (idx >= 0 && idx < static_cast<int>(kRangePresetCount)) {
+    s_range_index = static_cast<uint8_t>(idx);
+    saveRangeIndex();
+    Serial.printf("Range set from portal: index %u (%.0f km)\n",
+                  s_range_index, rangeCurrent().ring3_km);
+  }
 }
 
 void unitsReset() {

@@ -84,6 +84,10 @@ char s_runways_checkbox_attrs[32] = "type=\"checkbox\"";
 WiFiManagerParameter s_param_runways("show_runways", "Show airport runways", "T", 2,
                                      s_runways_checkbox_attrs, WFM_LABEL_AFTER);
 
+char s_range_select_html[512];
+WiFiManagerParameter s_param_range_select(s_range_select_html);
+WiFiManagerParameter s_param_range("range_preset", "", "3", 2, "type=\"hidden\"");
+
 void refreshPortalParamDefaults() {
   char lat_buf[kCoordParamLen + 1];
   char lon_buf[kCoordParamLen + 1];
@@ -97,6 +101,24 @@ void refreshPortalParamDefaults() {
   snprintf(s_runways_checkbox_attrs, sizeof(s_runways_checkbox_attrs),
            "type=\"checkbox\"%s", ui::radar::showRunways() ? " checked" : "");
   s_param_runways.setValue("T", 2);
+
+  const uint8_t cur = ui::radar::rangeIndex();
+  char cur_str[4];
+  snprintf(cur_str, sizeof(cur_str), "%u", cur);
+  s_param_range.setValue(cur_str, 2);
+  snprintf(s_range_select_html, sizeof(s_range_select_html),
+           "<br/><label>Radar Range</label><br/>"
+           "<select style='width:100%%' "
+           "onchange=\"document.getElementById('range_preset').value=this.value\">"
+           "<option value='0'%s>5 km (~3 mi)</option>"
+           "<option value='1'%s>10 km (~6 mi)</option>"
+           "<option value='2'%s>15 km (~9 mi)</option>"
+           "<option value='3'%s>25 km (~16 mi)</option>"
+           "</select>",
+           cur == 0 ? " selected" : "",
+           cur == 1 ? " selected" : "",
+           cur == 2 ? " selected" : "",
+           cur == 3 ? " selected" : "");
 }
 
 void onPortalParamsSaved() {
@@ -106,6 +128,7 @@ void onPortalParamsSaved() {
   }
   ui::radar::saveMilesFromPortal(s_param_miles.getValue());
   ui::radar::saveRunwaysFromPortal(s_param_runways.getValue());
+  ui::radar::saveRangeFromPortal(s_param_range.getValue());
 }
 
 void attachPortalParams(WiFiManager& wm) {
@@ -114,6 +137,8 @@ void attachPortalParams(WiFiManager& wm) {
   wm.addParameter(&s_param_lon);
   wm.addParameter(&s_param_miles);
   wm.addParameter(&s_param_runways);
+  wm.addParameter(&s_param_range_select);
+  wm.addParameter(&s_param_range);
   wm.setSaveParamsCallback(onPortalParamsSaved);
 }
 
